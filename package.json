@@ -9,7 +9,8 @@
     ],
     "scripts": {
         "dev": "npm run dev --workspace=apps/web",
-        "test:balance": "node tests/check-balance-test.js"
+        "test:balance": "node tests/check-balance-test.js",
+        "test:faucet": "node tests/fund-wallet-test.js"
     },
     "dependencies": {
         "@erc7824/nitrolite": "^0.5.3",
