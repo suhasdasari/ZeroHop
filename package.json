@@ -9,6 +9,7 @@
     ],
     "scripts": {
         "dev": "npm run dev --workspace=apps/web",
+        "build": "npm run build --workspace=apps/web",
         "test:balance": "node tests/check-balance-test.js",
         "test:faucet": "node tests/fund-wallet-test.js"
     },
