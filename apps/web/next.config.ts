@@ -9,7 +9,14 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-
+  async rewrites() {
+    return [
+      {
+        source: '/api/binance/:path*',
+        destination: 'https://api.binance.us/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useConnect, useAccount, useDisconnect } from 'wagmi'
 import { CandleChart } from '@/components/chart/CandleChart';
 import { useYellow } from '@/context/YellowProvider';
+import { useBinance } from '@/context/BinanceProvider';
+import { OrderBook } from '@/components/OrderBook';
 
 export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
@@ -14,7 +16,8 @@ export default function TradingApp() {
   const { connectors, connect } = useConnect()
   const { address, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
-  const { currentPrice, trades } = useYellow();
+  const { createOrder } = useYellow();
+  const { currentPrice, trades, lastCandle, isConnected: binanceConnected } = useBinance();
 
   const handleConnectClick = () => {
     if (isConnected) {
@@ -44,10 +47,10 @@ export default function TradingApp() {
       <header className="h-[60px] flex items-center justify-between px-6 border-b border-gray-800 bg-[#0A0E17] shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center border border-yellow-400/50">
-              <span className="text-yellow-400 font-bold text-xs">Y</span>
+            <div className="w-8 h-8 rounded-full bg-orange-400/20 flex items-center justify-center border border-orange-400/50">
+              <span className="text-orange-400 font-bold text-xs">₿</span>
             </div>
-            <span className="font-bold text-lg tracking-wide text-white">YELLOW / USDT</span>
+            <span className="font-bold text-lg tracking-wide text-white">BTC / USDT</span>
           </div>
           <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
             {currentPrice ? currentPrice.toFixed(4) : "---"}
@@ -70,32 +73,12 @@ export default function TradingApp() {
             {/* Left Column: Chart */}
             <main className="flex-1 bg-[#0A0E17] flex flex-col relative border-r border-gray-800">
               {/* Real Candle Chart */}
-              <CandleChart newTick={currentPrice} />
+              <CandleChart newTick={currentPrice} lastCandle={lastCandle} />
             </main>
 
-            {/* Middle Column: Market View / Recent Trades (Replaces Order Book) */}
+            {/* Middle Column: Order Book */}
             <aside className="w-[300px] flex flex-col border-r border-gray-800 bg-[#0A0E17]">
-              <div className="p-3 border-b border-gray-800 font-medium text-sm text-gray-400">Recent Trades</div>
-              <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <div className="grid grid-cols-3 px-3 py-2 text-xs text-gray-500 font-medium">
-                  <span>Price</span>
-                  <span className="text-right">Amount</span>
-                  <span className="text-right">Time</span>
-                </div>
-                {trades.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-gray-500">Waiting for trades...</div>
-                ) : (
-                  trades.map((trade, i) => (
-                    <div key={i} className="grid grid-cols-3 px-3 py-1.5 text-xs hover:bg-gray-800/30 cursor-pointer">
-                      <span className="text-green-400">
-                        {trade.price.toFixed(4)}
-                      </span>
-                      <span className="text-right text-gray-300">{trade.amount.toFixed(0)}</span>
-                      <span className="text-right text-gray-400">{trade.time}</span>
-                    </div>
-                  ))
-                )}
-              </div>
+              <OrderBook />
             </aside>
           </div>
 
@@ -156,7 +139,7 @@ export default function TradingApp() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500">Order Amount (YELLOW)</label>
+              <label className="text-xs text-gray-500">Order Amount (BTC)</label>
               <input
                 type="text"
                 placeholder="0.00"
@@ -176,7 +159,7 @@ export default function TradingApp() {
             </div>
 
             <button className={`w-full mt-6 py-4 rounded-lg font-bold text-lg shadow-lg transition-transform active:scale-95 ${side === 'buy' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-900/30' : 'bg-red-500 hover:bg-red-600 text-white shadow-red-900/30'}`}>
-              {side === 'buy' ? 'Buy YELLOW' : 'Sell YELLOW'}
+              {side === 'buy' ? 'Buy BTC' : 'Sell BTC'}
             </button>
           </div>
         </aside>

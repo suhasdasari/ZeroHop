@@ -5,9 +5,17 @@ import { createChart, IChartApi, ISeriesApi, CandlestickData, ColorType, Crossha
 
 interface CandleChartProps {
     newTick: number | null;
+    lastCandle: {
+        time: number;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+    } | null;
 }
 
-export const CandleChart: React.FC<CandleChartProps> = ({ newTick }) => {
+export const CandleChart: React.FC<CandleChartProps> = ({ newTick, lastCandle }) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -48,24 +56,48 @@ export const CandleChart: React.FC<CandleChartProps> = ({ newTick }) => {
             wickDownColor: '#ef5350',
         });
 
-        // Initial Dummy Data
-        const initialData: CandlestickData[] = [];
-        let time = Math.floor(Date.now() / 1000) - 60 * 60; // 1 hour ago
-        let open = 8500;
+        // Fetch historical data from Binance API via Next.js proxy
+        const fetchHistoricalData = async () => {
+            try {
+                const response = await fetch('/api/binance/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100');
+                const data = await response.json();
 
-        for (let i = 0; i < 60; i++) {
-            const high = open + Math.random() * 20;
-            const low = open - Math.random() * 20;
-            const close = (Math.random() > 0.5 ? high : low) - Math.random() * 5;
+                // Binance klines format: [timestamp, open, high, low, close, volume, ...]
+                const historicalData: CandlestickData[] = data.map((candle: any[]) => ({
+                    time: Math.floor(candle[0] / 1000) as any, // Convert ms to seconds
+                    open: parseFloat(candle[1]),
+                    high: parseFloat(candle[2]),
+                    low: parseFloat(candle[3]),
+                    close: parseFloat(candle[4]),
+                }));
 
-            initialData.push({ time: time as any, open, high, low, close });
+                candlestickSeries.setData(historicalData);
+                lastCandleRef.current = historicalData[historicalData.length - 1];
+            } catch (error) {
+                console.error('Failed to fetch historical data:', error);
 
-            time += 60; // Next minute
-            open = close;
-        }
+                // Fallback to dummy data if API fails
+                const initialData: CandlestickData[] = [];
+                let time = Math.floor(Date.now() / 1000) - 60 * 60;
+                let open = 95000;
 
-        candlestickSeries.setData(initialData);
-        lastCandleRef.current = initialData[initialData.length - 1];
+                for (let i = 0; i < 60; i++) {
+                    const high = open + Math.random() * 500;
+                    const low = open - Math.random() * 500;
+                    const close = (Math.random() > 0.5 ? high : low) - Math.random() * 100;
+
+                    initialData.push({ time: time as any, open, high, low, close });
+
+                    time += 60;
+                    open = close;
+                }
+
+                candlestickSeries.setData(initialData);
+                lastCandleRef.current = initialData[initialData.length - 1];
+            }
+        };
+
+        fetchHistoricalData();
 
         chartRef.current = chart;
         seriesRef.current = candlestickSeries;
@@ -118,6 +150,22 @@ export const CandleChart: React.FC<CandleChartProps> = ({ newTick }) => {
         }
 
     }, [newTick]);
+
+    // Handle real-time candle updates from Binance
+    useEffect(() => {
+        if (!lastCandle || !seriesRef.current) return;
+
+        const candleData = {
+            time: lastCandle.time as any,
+            open: lastCandle.open,
+            high: lastCandle.high,
+            low: lastCandle.low,
+            close: lastCandle.close,
+        };
+
+        seriesRef.current.update(candleData);
+        lastCandleRef.current = candleData;
+    }, [lastCandle]);
 
     return (
         <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
