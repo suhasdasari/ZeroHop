@@ -8,6 +8,7 @@
         "packages/*"
     ],
     "scripts": {
+        "dev": "npm run dev --workspace=apps/web",
         "test:balance": "node tests/check-balance-test.js"
     },
     "dependencies": {

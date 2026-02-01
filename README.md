@@ -41,7 +41,7 @@ Open `.env` and add your keys (e.g., `DEV_PRIVATE_KEY` for scripts).
 To start the Next.js frontend (The Exchange):
 
 ```bash
-cd apps/web
+# Run from the root directory
 npm run dev
 ```
 
