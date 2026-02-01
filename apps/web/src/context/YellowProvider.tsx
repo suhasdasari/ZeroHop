@@ -156,14 +156,6 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
                     const price = parseFloat(data.data?.last_price || data.data?.c || "0");
                     if (price > 0) {
                         setCurrentPrice(price);
-
-                        // Simulate a trade for the UI since we might not get full trade feed yet
-                        const newTrade: Trade = {
-                            price,
-                            amount: Math.random() * 1000, // Placeholder
-                            time: new Date().toLocaleTimeString(),
-                        };
-                        setTrades(prev => [newTrade, ...prev].slice(0, 50));
                     }
                 }
 

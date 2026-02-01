@@ -73,7 +73,7 @@ export default function TradingApp() {
             {/* Left Column: Chart */}
             <main className="flex-1 bg-[#0A0E17] flex flex-col relative border-r border-gray-800">
               {/* Real Candle Chart */}
-              <CandleChart newTick={currentPrice} lastCandle={lastCandle} />
+              <CandleChart lastCandle={lastCandle} />
             </main>
 
             {/* Middle Column: Order Book */}
