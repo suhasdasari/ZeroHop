@@ -7,7 +7,7 @@ import 'dotenv/config';
 
 async function runZeroHop() {
     const PRIVATE_KEY = process.env.DEV_PRIVATE_KEY;
-    const ALCHEMY_RPC_URL = process.env.ALCHEMY_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com';
+    const ALCHEMY_RPC_URL = process.env.ALCHEMY_RPC_URL;
 
     if (!PRIVATE_KEY) {
         console.error("❌ DEV_PRIVATE_KEY is missing in .env");

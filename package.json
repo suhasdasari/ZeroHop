@@ -1,0 +1,19 @@
+{
+    "name": "zero-hop-monorepo",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "test:balance": "node tests/check-balance-test.js"
+    },
+    "dependencies": {
+        "@erc7824/nitrolite": "^0.5.3",
+        "dotenv": "^17.2.3",
+        "viem": "^2.45.1",
+        "ws": "^8.19.0"
+    }
+}
