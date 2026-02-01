@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useConnect, useAccount, useDisconnect } from 'wagmi'
+import { CandleChart } from '@/components/chart/CandleChart';
+import { useYellow } from '@/context/YellowProvider';
 
 export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
@@ -12,6 +14,7 @@ export default function TradingApp() {
   const { connectors, connect } = useConnect()
   const { address, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
+  const { currentPrice, trades } = useYellow();
 
   const handleConnectClick = () => {
     if (isConnected) {
@@ -47,7 +50,7 @@ export default function TradingApp() {
             <span className="font-bold text-lg tracking-wide text-white">YELLOW / USDT</span>
           </div>
           <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
-            +2.4%
+            {currentPrice ? currentPrice.toFixed(4) : "---"}
           </span>
         </div>
         <button
@@ -60,21 +63,44 @@ export default function TradingApp() {
 
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Wrapper (Chart + Bottom Panel) */}
+        {/* Left Wrapper (Chart + Market View + Bottom Panel) */}
         <div className="flex flex-col flex-1 min-w-0">
-          {/* Top Section: Chart */}
+          {/* Top Row: Chart + Market View */}
           <div className="flex flex-1 min-h-0">
-            <main className="flex-1 bg-[#0A0E17] flex flex-col relative justify-center items-center">
-              <div className="absolute top-4 left-4 text-gray-500 font-mono text-sm z-10">
-                TradingView Chart Component
-              </div>
-              {/* Grid Lines Pattern for placeholder feel */}
-              <div className="w-full h-full opacity-10" style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+            {/* Left Column: Chart */}
+            <main className="flex-1 bg-[#0A0E17] flex flex-col relative border-r border-gray-800">
+              {/* Real Candle Chart */}
+              <CandleChart newTick={currentPrice} />
             </main>
+
+            {/* Middle Column: Market View / Recent Trades (Replaces Order Book) */}
+            <aside className="w-[300px] flex flex-col border-r border-gray-800 bg-[#0A0E17]">
+              <div className="p-3 border-b border-gray-800 font-medium text-sm text-gray-400">Recent Trades</div>
+              <div className="flex-1 overflow-y-auto scrollbar-hide">
+                <div className="grid grid-cols-3 px-3 py-2 text-xs text-gray-500 font-medium">
+                  <span>Price</span>
+                  <span className="text-right">Amount</span>
+                  <span className="text-right">Time</span>
+                </div>
+                {trades.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-gray-500">Waiting for trades...</div>
+                ) : (
+                  trades.map((trade, i) => (
+                    <div key={i} className="grid grid-cols-3 px-3 py-1.5 text-xs hover:bg-gray-800/30 cursor-pointer">
+                      <span className="text-green-400">
+                        {trade.price.toFixed(4)}
+                      </span>
+                      <span className="text-right text-gray-300">{trade.amount.toFixed(0)}</span>
+                      <span className="text-right text-gray-400">{trade.time}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </aside>
           </div>
 
-          {/* Bottom Panel: Open Positions */}
-          <section className="h-[300px] border-t border-gray-800 bg-[#0A0E17] flex flex-col">
+          {/* Bottom Panel: Open Positions (Spans Chart + Market View) */}
+          <section className="h-[250px] border-t border-gray-800 bg-[#0A0E17] flex flex-col shrink-0">
             <div className="flex border-b border-gray-800">
               {['Open Positions', 'Order History', 'Trades'].map((tab, i) => (
                 <button key={tab} className={`px-6 py-3 text-sm font-medium ${i === 0 ? 'text-yellow-400 border-b-2 border-yellow-400 bg-yellow-400/5' : 'text-gray-400 hover:text-gray-200'}`}>
@@ -87,47 +113,6 @@ export default function TradingApp() {
             </div>
           </section>
         </div>
-
-        {/* Order Book (Moved Next to Trading Terminal) */}
-        <aside className="w-[300px] flex flex-col border-l border-gray-800 bg-[#0A0E17]">
-          <div className="p-3 border-b border-gray-800 font-medium text-sm text-gray-400">Order Book</div>
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            {/* Header Row */}
-            <div className="grid grid-cols-3 px-3 py-2 text-xs text-gray-500">
-              <span>Price</span>
-              <span className="text-right">Size</span>
-              <span className="text-right">Total</span>
-            </div>
-            {/* Asks (Red) */}
-            <div className="flex flex-col-reverse">
-              {[...Array(12)].map((_, i) => (
-                <div key={`ask-${i}`} className="grid grid-cols-3 px-3 py-1 text-xs hover:bg-gray-800/30 cursor-pointer relative group">
-                  <span className="text-red-400 z-10">0.{(8500 + i * 5).toFixed(4)}</span>
-                  <span className="text-right text-gray-300 z-10">{(Math.random() * 1000).toFixed(0)}</span>
-                  <span className="text-right text-gray-400 z-10">--</span>
-                  <div className="absolute top-0 right-0 h-full bg-red-900/10" style={{ width: `${Math.random() * 80}%` }}></div>
-                </div>
-              ))}
-            </div>
-
-            <div className="py-2 px-3 text-lg font-bold text-white border-y border-gray-800 my-1 flex justify-between items-center bg-gray-900/30">
-              <span>0.8495</span>
-              <span className="text-sm font-normal text-gray-400">≈ $0.85</span>
-            </div>
-
-            {/* Bids (Green) */}
-            <div>
-              {[...Array(12)].map((_, i) => (
-                <div key={`bid-${i}`} className="grid grid-cols-3 px-3 py-1 text-xs hover:bg-gray-800/30 cursor-pointer relative">
-                  <span className="text-green-400 z-10">0.{(8490 - i * 5).toFixed(4)}</span>
-                  <span className="text-right text-gray-300 z-10">{(Math.random() * 1000).toFixed(0)}</span>
-                  <span className="text-right text-gray-400 z-10">--</span>
-                  <div className="absolute top-0 right-0 h-full bg-green-900/10" style={{ width: `${Math.random() * 80}%` }}></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
 
         {/* Right Column: Trading Terminal */}
         <aside className="w-[350px] border-l border-gray-800 bg-[#0A0E17] flex flex-col">
@@ -171,7 +156,7 @@ export default function TradingApp() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-gray-500">Amount (YELLOW)</label>
+              <label className="text-xs text-gray-500">Order Amount (YELLOW)</label>
               <input
                 type="text"
                 placeholder="0.00"
