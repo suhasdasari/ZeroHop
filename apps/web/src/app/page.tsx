@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import { useConnect, useAccount, useDisconnect } from 'wagmi'
 import { CandleChart } from '@/components/chart/CandleChart';
 import { useYellow } from '@/context/YellowProvider';
 import { useBinance } from '@/context/BinanceProvider';
@@ -14,7 +12,6 @@ import { BottomPanel } from '@/components/BottomPanel';
 export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
   const [side, setSide] = useState<"buy" | "sell">("buy");
-  const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch
@@ -22,33 +19,8 @@ export default function TradingApp() {
     setMounted(true);
   }, []);
 
-  const { connectors, connect } = useConnect()
-  const { address, isConnected } = useAccount()
-  const { disconnect } = useDisconnect()
-  const { createOrder, balances, isLoadingBalance, isAuthenticated } = useYellow();
-  const { currentPrice, trades, lastCandle, isConnected: binanceConnected } = useBinance();
-
-  const handleConnectClick = () => {
-    if (isConnected) {
-      disconnect()
-    } else {
-      setShowModal(true)
-    }
-  }
-
-  const handleWalletSelect = async (connector: any) => {
-    try {
-      await connect({ connector })
-      setShowModal(false)
-    } catch (error) {
-      console.error('Failed to connect:', error)
-    }
-  }
-
-  // Only show MetaMask (filter by name)
-  const metaMaskConnector = connectors.find(connector =>
-    connector.name.toLowerCase().includes('metamask')
-  )
+  const { createOrder } = useYellow();
+  const { lastCandle } = useBinance();
 
   return (
     <div className="h-screen w-screen bg-[#0B0E11] text-gray-200 font-sans overflow-hidden flex flex-col">
@@ -61,31 +33,6 @@ export default function TradingApp() {
           <span className="text-sm text-gray-400">Spot</span>
         </div>
         <div className="flex items-center gap-4">
-          {/* Yellow Network Balance */}
-          {isConnected && isAuthenticated && (
-            <div className="flex items-center gap-3 px-3 py-1.5 bg-gray-800/50 rounded-lg border border-gray-700">
-              {isLoadingBalance ? (
-                <span className="text-xs text-gray-400">Loading balance...</span>
-              ) : balances.length > 0 ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Yellow Balance:</span>
-                  {balances.map((balance, idx) => (
-                    <span key={idx} className="text-xs font-medium text-green-400">
-                      {balance.amount} {balance.asset}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-xs text-gray-400">No balance</span>
-              )}
-            </div>
-          )}
-          <button
-            onClick={handleConnectClick}
-            className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-medium transition-colors text-white"
-          >
-            {mounted && isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
-          </button>
         </div>
       </header>
 
@@ -183,41 +130,6 @@ export default function TradingApp() {
 
 
       </div>
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1E2329] p-6 rounded-xl border border-gray-800 w-[400px]">
-            <h2 className="text-xl font-bold mb-4">Connect Wallet</h2>
-            <div className="flex flex-col gap-3">
-              {metaMaskConnector ? (
-                <button
-                  onClick={() => handleWalletSelect(metaMaskConnector)}
-                  className="flex items-center gap-3 p-4 rounded-lg bg-[#2B3139] hover:bg-[#363C46] transition-colors"
-                >
-                  <div className="w-8 h-8 relative">
-                    <Image
-                      src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
-                      alt="MetaMask"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <span className="font-medium">MetaMask</span>
-                </button>
-              ) : (
-                <div className="text-center py-4 text-gray-400">
-                  MetaMask not detected
-                </div>
-              )}
-              <button
-                onClick={() => setShowModal(false)}
-                className="mt-4 text-sm text-gray-500 hover:text-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
