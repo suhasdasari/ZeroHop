@@ -59,6 +59,21 @@ export const BinanceProvider = ({ children }: { children: React.ReactNode }) => 
     const wsKlineRef = useRef<WebSocket | null>(null);
 
     useEffect(() => {
+        // Fetch initial price immediately
+        const fetchInitialPrice = async () => {
+            try {
+                const response = await fetch('/api/binance/api/v3/ticker/price?symbol=BTCUSDT');
+                const data = await response.json();
+                if (data.price) {
+                    setCurrentPrice(parseFloat(data.price));
+                }
+            } catch (error) {
+                console.error('Failed to fetch initial price:', error);
+            }
+        };
+
+        fetchInitialPrice();
+
         // Connect to Binance.US WebSocket streams
         const connectWebSockets = () => {
             // 1. Trade Stream - for live price and recent trades
