@@ -52,24 +52,6 @@ export const TopStatsBar: React.FC = () => {
                 <span className="text-xs text-gray-500">24h Low</span>
                 <span className="text-sm text-gray-300">${low24h.toLocaleString()}</span>
             </div>
-
-            {/* 24h Volume */}
-            <div className="flex flex-col">
-                <span className="text-xs text-gray-500">24h Volume</span>
-                <span className="text-sm text-gray-300">${volume24h}M</span>
-            </div>
-
-            {/* Funding Rate */}
-            <div className="flex flex-col">
-                <span className="text-xs text-gray-500">Funding Rate</span>
-                <span className="text-sm text-green-400">0.0012%</span>
-            </div>
-
-            {/* Next Funding */}
-            <div className="flex flex-col">
-                <span className="text-xs text-gray-500">Next Funding</span>
-                <span className="text-sm text-gray-300">00:33</span>
-            </div>
         </div>
     );
 };
