@@ -17,7 +17,7 @@ interface CandleChartProps {
 }
 
 export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
-    const [timeframe, setTimeframe] = useState<Timeframe>('1m');
+    const [timeframe, setTimeframe] = useState<Timeframe>('1h');
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -220,8 +220,8 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
                             key={tf}
                             onClick={() => setTimeframe(tf)}
                             className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${timeframe === tf
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-800'
                                 }`}
                         >
                             {tf}
