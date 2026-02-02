@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useConnect, useAccount, useDisconnect } from 'wagmi'
 import { CandleChart } from '@/components/chart/CandleChart';
@@ -15,6 +15,12 @@ export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { connectors, connect } = useConnect()
   const { address, isConnected } = useAccount()
@@ -78,7 +84,7 @@ export default function TradingApp() {
             onClick={handleConnectClick}
             className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-medium transition-colors text-white"
           >
-            {isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
+            {mounted && isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
           </button>
         </div>
       </header>

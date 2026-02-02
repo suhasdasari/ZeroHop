@@ -64,22 +64,30 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
         const connectYellow = async () => {
             try {
                 console.log("🔌 Connecting to Yellow Network...");
+                console.log("Wallet Client:", walletClient);
+                console.log("Address:", address);
 
                 // Create session manager
                 const session = new YellowSessionManager();
                 sessionManagerRef.current = session;
+                console.log("✅ Session manager created");
 
                 // Connect and authenticate (using WalletClient)
+                console.log("📡 Calling session.connect()...");
                 await session.connect(walletClient);
+                console.log("✅ Session connected");
 
                 setIsAuthenticated(true);
                 console.log("✅ Yellow Network authenticated!");
 
                 // Fetch initial balance
+                console.log("💰 Fetching balance...");
                 await fetchBalance();
+                console.log("✅ Balance fetched");
 
             } catch (error) {
                 console.error("❌ Yellow Network connection failed:", error);
+                console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
                 setIsAuthenticated(false);
             }
         };
