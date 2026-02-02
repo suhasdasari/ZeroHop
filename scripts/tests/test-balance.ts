@@ -1,40 +1,43 @@
 /**
- * Test balance fetching using Yellow Network session
+ * Test Yellow Network balance fetching
  */
 
 import { YellowSessionManager } from '../core/YellowSessionManager.js';
 import { getBalance } from '../actions/getBalance.js';
 import { logger } from '../utils/logger.js';
-import { privateKeyToAccount } from 'viem/accounts';
 import 'dotenv/config';
 
 async function testBalance() {
-    const PRIVATE_KEY = process.env.DEV_PRIVATE_KEY;
+    const PRIVATE_KEY = process.env.DEV_PRIVATE_KEY as `0x${string}`;
 
     if (!PRIVATE_KEY) {
         logger.error('DEV_PRIVATE_KEY is missing in .env');
         process.exit(1);
     }
 
-    const account = privateKeyToAccount(PRIVATE_KEY);
     const session = new YellowSessionManager();
 
     try {
         // Connect and authenticate
         await session.connect(PRIVATE_KEY);
 
-        // Fetch balances
+        // Get wallet address from private key
+        const { privateKeyToAccount } = await import('viem/accounts');
+        const account = privateKeyToAccount(PRIVATE_KEY);
+
+        // Fetch balance
         const balances = await getBalance(session, account.address);
 
         logger.section('Test Results');
         logger.success('Balance fetch successful!');
-        logger.info('Total assets:', balances?.length || 0);
+        logger.info(`Total assets: ${balances.length}`);
 
         // Disconnect
+        logger.info('Disconnecting from Yellow Network...');
         session.disconnect();
 
     } catch (error) {
-        logger.error('Balance test failed:', error.message);
+        logger.error(`Balance test failed: ${(error as Error).message}`);
         session.disconnect();
         process.exit(1);
     }

@@ -19,7 +19,7 @@ export default function TradingApp() {
   const { connectors, connect } = useConnect()
   const { address, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
-  const { createOrder } = useYellow();
+  const { createOrder, balances, isLoadingBalance, isAuthenticated } = useYellow();
   const { currentPrice, trades, lastCandle, isConnected: binanceConnected } = useBinance();
 
   const handleConnectClick = () => {
@@ -54,12 +54,33 @@ export default function TradingApp() {
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">Spot</span>
         </div>
-        <button
-          onClick={handleConnectClick}
-          className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-medium transition-colors text-white"
-        >
-          {isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Yellow Network Balance */}
+          {isConnected && isAuthenticated && (
+            <div className="flex items-center gap-3 px-3 py-1.5 bg-gray-800/50 rounded-lg border border-gray-700">
+              {isLoadingBalance ? (
+                <span className="text-xs text-gray-400">Loading balance...</span>
+              ) : balances.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Yellow Balance:</span>
+                  {balances.map((balance, idx) => (
+                    <span key={idx} className="text-xs font-medium text-green-400">
+                      {balance.amount} {balance.asset}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-xs text-gray-400">No balance</span>
+              )}
+            </div>
+          )}
+          <button
+            onClick={handleConnectClick}
+            className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-medium transition-colors text-white"
+          >
+            {isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
+          </button>
+        </div>
       </header>
 
       {/* Main Layout */}

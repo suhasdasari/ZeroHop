@@ -7,7 +7,7 @@ import { logger } from '../utils/logger.js';
 import 'dotenv/config';
 
 async function testSession() {
-    const PRIVATE_KEY = process.env.DEV_PRIVATE_KEY;
+    const PRIVATE_KEY = process.env.DEV_PRIVATE_KEY as `0x${string}`;
 
     if (!PRIVATE_KEY) {
         logger.error('DEV_PRIVATE_KEY is missing in .env');
@@ -21,8 +21,8 @@ async function testSession() {
         await session.connect(PRIVATE_KEY);
 
         logger.success('Session created successfully!');
-        logger.info('Session Key:', session.getSessionKey());
-        logger.info('Is Connected:', session.isConnected());
+        logger.info(`Session Key: ${session.getSessionSigner()}`);
+        logger.info(`Is Connected: ${session.isConnected()}`);
 
         // Keep session alive for 5 seconds
         logger.info('Keeping session alive for 5 seconds...');
@@ -33,7 +33,7 @@ async function testSession() {
         logger.success('Session closed successfully!');
 
     } catch (error) {
-        logger.error('Session test failed:', error.message);
+        logger.error(`Session test failed: ${(error as Error).message}`);
         process.exit(1);
     }
 }

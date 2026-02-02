@@ -7,7 +7,8 @@ import {
     createECDSAMessageSigner,
     createEIP712AuthMessageSigner,
     createAuthVerifyMessageFromChallenge,
-    createAuthRequestMessage
+    createAuthRequestMessage,
+    createGetLedgerBalancesMessage
 } from "@erc7824/nitrolite";
 
 interface Trade {
@@ -16,12 +17,20 @@ interface Trade {
     time: string;
 }
 
+interface YellowBalance {
+    asset: string;
+    amount: string;
+}
+
 interface YellowContextType {
     currentPrice: number | null;
     trades: Trade[];
     isConnected: boolean;
     isAuthenticated: boolean;
+    balances: YellowBalance[];
+    isLoadingBalance: boolean;
     createOrder: (side: string, price: number, amount: number) => Promise<string | undefined>;
+    refreshBalance: () => Promise<void>;
 }
 
 const YellowContext = createContext<YellowContextType>({
@@ -29,7 +38,10 @@ const YellowContext = createContext<YellowContextType>({
     trades: [],
     isConnected: false,
     isAuthenticated: false,
+    balances: [],
+    isLoadingBalance: false,
     createOrder: async () => undefined,
+    refreshBalance: async () => { },
 });
 
 export const useYellow = () => useContext(YellowContext);
@@ -42,9 +54,13 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
     const [trades, setTrades] = useState<Trade[]>([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isWsConnected, setIsWsConnected] = useState(false);
+    const [balances, setBalances] = useState<YellowBalance[]>([]);
+    const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
     const sessionKeyRef = useRef<string | null>(null);
+    const sessionSignerRef = useRef<any>(null);
+    const sessionAddressRef = useRef<string | null>(null);
 
     useEffect(() => {
         if (!walletClient || !address) return;
@@ -54,6 +70,8 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
         const sessionAccount = privateKeyToAccount(sessionPrivateKey);
         const sessionAddress = sessionAccount.address;
         sessionKeyRef.current = sessionPrivateKey;
+        sessionSignerRef.current = createECDSAMessageSigner(sessionPrivateKey);
+        sessionAddressRef.current = sessionAddress;
 
         // 2. Connect to WebSocket
         const ws = new WebSocket("wss://clearnet-sandbox.yellow.com/ws");
@@ -132,12 +150,23 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
                     console.log("✅ Authenticated with Yellow Engine");
                     setIsAuthenticated(true);
 
-                    // 6. Subscribe to Market Data
+                    // 6. Fetch Balance
+                    fetchBalance(ws, address);
+
+                    // 7. Subscribe to Market Data
                     const subscribeMsg = JSON.stringify({
                         method: "subscribe",
                         params: ["ticker.ytest.usd"]
                     });
                     ws.send(subscribeMsg);
+                }
+
+                // Handle Balance Response
+                if (data.res && data.res[1] === 'get_ledger_balances') {
+                    const ledgerBalances = data.res[2].ledger_balances || [];
+                    console.log("💰 Balances:", ledgerBalances);
+                    setBalances(ledgerBalances);
+                    setIsLoadingBalance(false);
                 }
 
                 // 7. Handle Ticker Updates
@@ -175,6 +204,36 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, [walletClient, address]);
 
+    // Helper function to fetch balance
+    const fetchBalance = async (ws: WebSocket, userAddress: string) => {
+        if (!sessionSignerRef.current || !sessionAddressRef.current) {
+            console.error('Session not initialized');
+            return;
+        }
+
+        setIsLoadingBalance(true);
+        try {
+            const balanceMsg = await createGetLedgerBalancesMessage(
+                sessionSignerRef.current,
+                userAddress,
+                Date.now()
+            );
+            ws.send(balanceMsg);
+        } catch (error) {
+            console.error('Failed to fetch balance:', error);
+            setIsLoadingBalance(false);
+        }
+    };
+
+    // Refresh balance function
+    const refreshBalance = async () => {
+        if (!wsRef.current || !address) {
+            console.error('Not connected');
+            return;
+        }
+        await fetchBalance(wsRef.current, address);
+    };
+
     const createOrder = async (side: string, price: number, amount: number) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
             console.error("WS not connected");
@@ -204,7 +263,16 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <YellowContext.Provider value={{ currentPrice, trades, isConnected: isWsConnected, isAuthenticated, createOrder }}>
+        <YellowContext.Provider value={{
+            currentPrice,
+            trades,
+            isConnected: isWsConnected,
+            isAuthenticated,
+            balances,
+            isLoadingBalance,
+            createOrder,
+            refreshBalance
+        }}>
             {children}
         </YellowContext.Provider>
     );

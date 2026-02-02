@@ -9,15 +9,20 @@
     "scripts": {
         "dev": "npm run dev --workspace=apps/web",
         "build": "npm run build --workspace=apps/web",
-        "test:session": "node scripts/tests/test-session.js",
-        "test:balance": "node scripts/tests/test-balance.js",
-        "test:faucet": "node scripts/tests/test-faucet.js",
-        "test:flow": "node scripts/tests/test-full-flow.js"
+        "test:session": "tsx scripts/tests/test-session.ts",
+        "test:balance": "tsx scripts/tests/test-balance.ts",
+        "test:faucet": "tsx scripts/tests/test-faucet.ts",
+        "test:flow": "tsx scripts/tests/test-full-flow.ts"
     },
     "dependencies": {
         "@erc7824/nitrolite": "^0.5.3",
         "dotenv": "^17.2.3",
         "viem": "^2.45.1",
         "ws": "^8.19.0"
+    },
+    "devDependencies": {
+        "@types/node": "^25.2.0",
+        "@types/ws": "^8.18.1",
+        "tsx": "^4.21.0"
     }
 }
