@@ -2,8 +2,8 @@
  * Test Yellow Network faucet
  */
 
-import { fundWallet } from '../actions/fundWallet.js';
-import { logger } from '../utils/logger.js';
+import { fundWallet } from '../actions/fundWallet';
+import { logger } from '../utils/logger';
 import 'dotenv/config';
 
 async function testFaucet() {

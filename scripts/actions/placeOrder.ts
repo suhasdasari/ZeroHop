@@ -3,8 +3,8 @@
  * TODO: Implement with Yellow Network SDK order placement methods
  */
 
-import type { YellowSessionManager } from '../core/YellowSessionManager.js';
-import { logger } from '../utils/logger.js';
+import type { YellowSessionManager } from '../core/YellowSessionManager';
+import { logger } from '../utils/logger';
 
 export interface OrderParams {
     side: 'buy' | 'sell';

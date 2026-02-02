@@ -3,10 +3,10 @@
  * Demonstrates persistent session usage across multiple operations
  */
 
-import { YellowSessionManager } from '../core/YellowSessionManager.js';
-import { getBalance } from '../actions/getBalance.js';
-import { placeOrder } from '../actions/placeOrder.js';
-import { logger } from '../utils/logger.js';
+import { YellowSessionManager } from '../core/YellowSessionManager';
+import { getBalance } from '../actions/getBalance';
+import { placeOrder } from '../actions/placeOrder';
+import { logger } from '../utils/logger';
 import 'dotenv/config';
 
 async function testFullFlow() {

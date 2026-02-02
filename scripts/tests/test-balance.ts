@@ -2,9 +2,9 @@
  * Test Yellow Network balance fetching
  */
 
-import { YellowSessionManager } from '../core/YellowSessionManager.js';
-import { getBalance } from '../actions/getBalance.js';
-import { logger } from '../utils/logger.js';
+import { YellowSessionManager } from '../core/YellowSessionManager';
+import { getBalance } from '../actions/getBalance';
+import { logger } from '../utils/logger';
 import 'dotenv/config';
 
 async function testBalance() {

@@ -2,8 +2,8 @@
  * Request test tokens from Yellow Network faucet
  */
 
-import { YELLOW_CONFIG } from '../core/config.js';
-import { logger } from '../utils/logger.js';
+import { YELLOW_CONFIG } from '../core/config';
+import { logger } from '../utils/logger';
 
 interface FaucetResponse {
     success: boolean;

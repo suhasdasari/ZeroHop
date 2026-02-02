@@ -2,8 +2,8 @@
  * Test Yellow Network session creation and authentication
  */
 
-import { YellowSessionManager } from '../core/YellowSessionManager.js';
-import { logger } from '../utils/logger.js';
+import { YellowSessionManager } from '../core/YellowSessionManager';
+import { logger } from '../utils/logger';
 import 'dotenv/config';
 
 async function testSession() {

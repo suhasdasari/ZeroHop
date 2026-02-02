@@ -13,8 +13,8 @@ import {
 import { createPublicClient, createWalletClient, http, type WalletClient } from 'viem';
 import { sepolia } from 'viem/chains';
 import { privateKeyToAccount, generatePrivateKey, type PrivateKeyAccount } from 'viem/accounts';
-import { YELLOW_CONFIG } from './config.js';
-import { logger } from '../utils/logger.js';
+import { YELLOW_CONFIG } from './config';
+import { logger } from '../utils/logger';
 
 // WebSocket type that works in both Node.js and browser
 type WebSocketType = WebSocket | any;
