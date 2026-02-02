@@ -29,11 +29,21 @@ interface Candle {
     volume: number;
 }
 
+interface Ticker24h {
+    priceChange: number;
+    priceChangePercent: number;
+    highPrice: number;
+    lowPrice: number;
+    volume: number;
+    quoteVolume: number;
+}
+
 interface BinanceContextType {
     currentPrice: number | null;
     trades: Trade[];
     orderBook: OrderBook;
     lastCandle: Candle | null;
+    ticker24h: Ticker24h | null;
     isConnected: boolean;
 }
 
@@ -42,6 +52,7 @@ const BinanceContext = createContext<BinanceContextType>({
     trades: [],
     orderBook: { bids: [], asks: [] },
     lastCandle: null,
+    ticker24h: null,
     isConnected: false,
 });
 
@@ -52,6 +63,7 @@ export const BinanceProvider = ({ children }: { children: React.ReactNode }) => 
     const [trades, setTrades] = useState<Trade[]>([]);
     const [orderBook, setOrderBook] = useState<OrderBook>({ bids: [], asks: [] });
     const [lastCandle, setLastCandle] = useState<Candle | null>(null);
+    const [ticker24h, setTicker24h] = useState<Ticker24h | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
     const wsTradeRef = useRef<WebSocket | null>(null);
@@ -72,7 +84,31 @@ export const BinanceProvider = ({ children }: { children: React.ReactNode }) => 
             }
         };
 
+        // Fetch 24h ticker statistics
+        const fetch24hStats = async () => {
+            try {
+                const response = await fetch('/api/binance/api/v3/ticker/24hr?symbol=BTCUSDT');
+                const data = await response.json();
+                if (data) {
+                    setTicker24h({
+                        priceChange: parseFloat(data.priceChange),
+                        priceChangePercent: parseFloat(data.priceChangePercent),
+                        highPrice: parseFloat(data.highPrice),
+                        lowPrice: parseFloat(data.lowPrice),
+                        volume: parseFloat(data.volume),
+                        quoteVolume: parseFloat(data.quoteVolume),
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch 24h stats:', error);
+            }
+        };
+
         fetchInitialPrice();
+        fetch24hStats();
+
+        // Refresh 24h stats every minute
+        const statsInterval = setInterval(fetch24hStats, 60000);
 
         // Connect to Binance.US WebSocket streams
         const connectWebSockets = () => {
@@ -221,6 +257,7 @@ export const BinanceProvider = ({ children }: { children: React.ReactNode }) => 
 
         // Cleanup on unmount
         return () => {
+            clearInterval(statsInterval);
             wsTradeRef.current?.close();
             wsDepthRef.current?.close();
             wsKlineRef.current?.close();
@@ -228,7 +265,7 @@ export const BinanceProvider = ({ children }: { children: React.ReactNode }) => 
     }, []);
 
     return (
-        <BinanceContext.Provider value={{ currentPrice, trades, orderBook, lastCandle, isConnected }}>
+        <BinanceContext.Provider value={{ currentPrice, trades, orderBook, lastCandle, ticker24h, isConnected }}>
             {children}
         </BinanceContext.Provider>
     );

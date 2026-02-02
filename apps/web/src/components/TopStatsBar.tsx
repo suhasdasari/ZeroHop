@@ -4,14 +4,14 @@ import React from 'react';
 import { useBinance } from '@/context/BinanceProvider';
 
 export const TopStatsBar: React.FC = () => {
-    const { currentPrice, orderBook } = useBinance();
+    const { currentPrice, ticker24h } = useBinance();
 
-    // Calculate 24h stats (mock for now - would need historical data)
-    const change24h = 1723.45; // Mock
-    const changePercent = 2.28; // Mock
-    const high24h = 78500; // Mock
-    const low24h = 74200; // Mock
-    const volume24h = 337.4; // Mock in millions
+    // Use real 24h stats from Binance API
+    const change24h = ticker24h?.priceChange || 0;
+    const changePercent = ticker24h?.priceChangePercent || 0;
+    const high24h = ticker24h?.highPrice || 0;
+    const low24h = ticker24h?.lowPrice || 0;
+    const volume24h = ticker24h ? (ticker24h.quoteVolume / 1000000) : 0; // Convert to millions
 
     const isPositive = change24h >= 0;
 
