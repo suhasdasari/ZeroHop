@@ -1,7 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
-import { useWalletClient, useAccount } from "wagmi";
+import { useWalletClient, useAccount, useChainId, useSwitchChain } from "wagmi";
+import { sepolia } from "wagmi/chains";
+import { toast } from "sonner";
 import { YellowSessionManager } from "@scripts/core/YellowSessionManager";
 import { getBalance, type YellowBalance } from "@scripts/actions/getBalance";
 
@@ -37,7 +39,14 @@ export const useYellow = () => useContext(YellowContext);
 
 export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: walletClient } = useWalletClient();
-    const { address, isConnected: walletIsConnected } = useAccount();
+    const { address, isConnected: walletIsConnected, chain } = useAccount();
+    const globalChainId = useChainId();
+    const { switchChain } = useSwitchChain();
+
+    // Determine current chain ID from account or global context
+    const currentChainId = chain?.id || globalChainId;
+
+
 
     const [currentPrice, setCurrentPrice] = useState<number | null>(null);
     const [trades, setTrades] = useState<Trade[]>([]);
@@ -49,6 +58,23 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Auto-connect when wallet connects
     useEffect(() => {
+        // Check for correct network
+        if (walletIsConnected) {
+            // Case 1: Explicit wrong network detected
+            if (currentChainId && currentChainId !== sepolia.id) {
+                toast.error(`Wrong network detected (${currentChainId}). Switching to Sepolia...`);
+                switchChain({ chainId: sepolia.id });
+                return;
+            }
+
+            // Case 2: Connected but no wallet client (strong indicator of network mismatch)
+            if (!walletClient) {
+                console.warn("Connected but no WalletClient. Attempting network switch...");
+                switchChain({ chainId: sepolia.id });
+                return;
+            }
+        }
+
         if (!walletClient || !address || !walletIsConnected) {
             // Cleanup if wallet disconnects
             if (sessionManagerRef.current) {
@@ -63,31 +89,21 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
         // Connect to Yellow Network
         const connectYellow = async () => {
             try {
-                console.log("🔌 Connecting to Yellow Network...");
-                console.log("Wallet Client:", walletClient);
-                console.log("Address:", address);
-
                 // Create session manager
                 const session = new YellowSessionManager();
                 sessionManagerRef.current = session;
-                console.log("✅ Session manager created");
 
                 // Connect and authenticate (using WalletClient)
-                console.log("📡 Calling session.connect()...");
                 await session.connect(walletClient);
-                console.log("✅ Session connected");
 
                 setIsAuthenticated(true);
-                console.log("✅ Yellow Network authenticated!");
+                toast.success("Connected to Yellow Network");
 
                 // Fetch initial balance
-                console.log("💰 Fetching balance...");
                 await fetchBalance();
-                console.log("✅ Balance fetched");
 
             } catch (error) {
                 console.error("❌ Yellow Network connection failed:", error);
-                console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
                 setIsAuthenticated(false);
             }
         };
@@ -100,7 +116,7 @@ export const YellowProvider = ({ children }: { children: React.ReactNode }) => {
                 sessionManagerRef.current.disconnect();
             }
         };
-    }, [walletClient, address, walletIsConnected]);
+    }, [walletClient, address, walletIsConnected, currentChainId]);
 
     // Fetch balance using the imported getBalance function
     const fetchBalance = async () => {

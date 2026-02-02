@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+
+  // Turbopack configuration for Next.js 16
+  turbopack: {
+    resolveAlias: {
+      '@scripts': '../../scripts',
+    },
+  },
+
   async rewrites() {
     return [
       {
