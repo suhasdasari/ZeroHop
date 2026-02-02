@@ -1,12 +1,8 @@
 "use client";
 
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useConnect, useAccount, useDisconnect } from 'wagmi'
-=======
-import React, { useState } from "react";
->>>>>>> 6956063f590eec9020bf2d0b0b68a10fc540accd
 import { CandleChart } from '@/components/chart/CandleChart';
 import { useYellow } from '@/context/YellowProvider';
 import { useBinance } from '@/context/BinanceProvider';
@@ -18,7 +14,6 @@ import { BottomPanel } from '@/components/BottomPanel';
 export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
   const [side, setSide] = useState<"buy" | "sell">("buy");
-<<<<<<< HEAD
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -26,11 +21,34 @@ export default function TradingApp() {
   useEffect(() => {
     setMounted(true);
   }, []);
-=======
->>>>>>> 6956063f590eec9020bf2d0b0b68a10fc540accd
 
-  const { createOrder } = useYellow();
-  const { lastCandle } = useBinance();
+  const { connectors, connect } = useConnect()
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
+  const { createOrder, balances, isLoadingBalance, isAuthenticated } = useYellow();
+  const { currentPrice, trades, lastCandle, isConnected: binanceConnected } = useBinance();
+
+  const handleConnectClick = () => {
+    if (isConnected) {
+      disconnect()
+    } else {
+      setShowModal(true)
+    }
+  }
+
+  const handleWalletSelect = async (connector: any) => {
+    try {
+      await connect({ connector })
+      setShowModal(false)
+    } catch (error) {
+      console.error('Failed to connect:', error)
+    }
+  }
+
+  // Only show MetaMask (filter by name)
+  const metaMaskConnector = connectors.find(connector =>
+    connector.name.toLowerCase().includes('metamask')
+  )
 
   return (
     <div className="h-screen w-screen bg-[#0B0E11] text-gray-200 font-sans overflow-hidden flex flex-col">
@@ -42,7 +60,6 @@ export default function TradingApp() {
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">Spot</span>
         </div>
-<<<<<<< HEAD
         <div className="flex items-center gap-4">
           {/* Yellow Network Balance */}
           {isConnected && isAuthenticated && (
@@ -70,8 +87,6 @@ export default function TradingApp() {
             {mounted && isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
           </button>
         </div>
-=======
->>>>>>> 6956063f590eec9020bf2d0b0b68a10fc540accd
       </header>
 
       {/* Main Layout */}
@@ -168,6 +183,41 @@ export default function TradingApp() {
 
 
       </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[#1E2329] p-6 rounded-xl border border-gray-800 w-[400px]">
+            <h2 className="text-xl font-bold mb-4">Connect Wallet</h2>
+            <div className="flex flex-col gap-3">
+              {metaMaskConnector ? (
+                <button
+                  onClick={() => handleWalletSelect(metaMaskConnector)}
+                  className="flex items-center gap-3 p-4 rounded-lg bg-[#2B3139] hover:bg-[#363C46] transition-colors"
+                >
+                  <div className="w-8 h-8 relative">
+                    <Image
+                      src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
+                      alt="MetaMask"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="font-medium">MetaMask</span>
+                </button>
+              ) : (
+                <div className="text-center py-4 text-gray-400">
+                  MetaMask not detected
+                </div>
+              )}
+              <button
+                onClick={() => setShowModal(false)}
+                className="mt-4 text-sm text-gray-500 hover:text-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
