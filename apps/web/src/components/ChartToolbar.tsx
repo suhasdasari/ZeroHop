@@ -23,8 +23,8 @@ export const ChartToolbar: React.FC = () => {
                     key={tool.id}
                     onClick={() => setActiveTool(tool.id)}
                     className={`w-9 h-9 flex items-center justify-center rounded transition-all group relative ${activeTool === tool.id
-                            ? 'bg-indigo-600 text-white'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                        ? 'bg-indigo-600 text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
                         }`}
                     title={tool.label}
                 >
@@ -37,16 +37,6 @@ export const ChartToolbar: React.FC = () => {
                 </button>
             ))}
 
-            {/* Divider */}
-            <div className="w-6 h-px bg-gray-800 my-2"></div>
-
-            {/* Settings */}
-            <button
-                className="w-9 h-9 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
-                title="Chart Settings"
-            >
-                <span className="text-lg">⚙</span>
-            </button>
         </div>
     );
 };

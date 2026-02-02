@@ -1,8 +1,12 @@
 "use client";
 
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useConnect, useAccount, useDisconnect } from 'wagmi'
+=======
+import React, { useState } from "react";
+>>>>>>> 6956063f590eec9020bf2d0b0b68a10fc540accd
 import { CandleChart } from '@/components/chart/CandleChart';
 import { useYellow } from '@/context/YellowProvider';
 import { useBinance } from '@/context/BinanceProvider';
@@ -14,6 +18,7 @@ import { BottomPanel } from '@/components/BottomPanel';
 export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
   const [side, setSide] = useState<"buy" | "sell">("buy");
+<<<<<<< HEAD
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -21,34 +26,11 @@ export default function TradingApp() {
   useEffect(() => {
     setMounted(true);
   }, []);
+=======
+>>>>>>> 6956063f590eec9020bf2d0b0b68a10fc540accd
 
-  const { connectors, connect } = useConnect()
-  const { address, isConnected } = useAccount()
-  const { disconnect } = useDisconnect()
-  const { createOrder, balances, isLoadingBalance, isAuthenticated } = useYellow();
-  const { currentPrice, trades, lastCandle, isConnected: binanceConnected } = useBinance();
-
-  const handleConnectClick = () => {
-    if (isConnected) {
-      disconnect()
-    } else {
-      setShowModal(true)
-    }
-  }
-
-  const handleWalletSelect = async (connector: any) => {
-    try {
-      await connect({ connector })
-      setShowModal(false)
-    } catch (error) {
-      console.error('Failed to connect:', error)
-    }
-  }
-
-  // Only show MetaMask (filter by name)
-  const metaMaskConnector = connectors.find(connector =>
-    connector.name.toLowerCase().includes('metamask')
-  )
+  const { createOrder } = useYellow();
+  const { lastCandle } = useBinance();
 
   return (
     <div className="h-screen w-screen bg-[#0B0E11] text-gray-200 font-sans overflow-hidden flex flex-col">
@@ -60,6 +42,7 @@ export default function TradingApp() {
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400">Spot</span>
         </div>
+<<<<<<< HEAD
         <div className="flex items-center gap-4">
           {/* Yellow Network Balance */}
           {isConnected && isAuthenticated && (
@@ -87,6 +70,8 @@ export default function TradingApp() {
             {mounted && isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
           </button>
         </div>
+=======
+>>>>>>> 6956063f590eec9020bf2d0b0b68a10fc540accd
       </header>
 
       {/* Main Layout */}
@@ -181,72 +166,8 @@ export default function TradingApp() {
           </div>
         </aside>
 
-        {/* Far Right Utility Bar */}
-        <aside className="w-[60px] border-l border-gray-800 bg-[#0A0E17] flex flex-col items-center py-4 gap-6">
-          {/* Icons using simplified SVG placeholders */}
-          <div className="w-8 h-8 rounded-lg bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 cursor-pointer">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"></path></svg>
-          </div>
-          <div className="w-8 h-8 rounded-lg bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 cursor-pointer">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          </div>
-          <div className="w-8 h-8 rounded-lg bg-gray-800/50 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 cursor-pointer">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          </div>
-        </aside>
+
       </div>
-
-      {/* Wallet Selection Modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Connect Wallet</h2>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {metaMaskConnector ? (
-                <button
-                  onClick={() => handleWalletSelect(metaMaskConnector)}
-                  className="w-full p-4 rounded-lg border border-gray-700 hover:border-white transition-colors flex items-center justify-between group"
-                >
-                  <span className="font-medium">MetaMask</span>
-                  <span className="text-gray-400 group-hover:text-white">→</span>
-                </button>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="mb-4">MetaMask not detected</p>
-                  <p className="text-sm">Please install MetaMask extension</p>
-                  <a
-                    href="https://metamask.io/download/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-block px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                  >
-                    Install MetaMask
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <p className="mt-4 text-sm text-gray-400 text-center">
-              By connecting, you agree to our Terms of Service
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

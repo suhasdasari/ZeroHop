@@ -5,9 +5,18 @@ import { useBinance } from '@/context/BinanceProvider';
 
 export const OrderBook: React.FC = () => {
     const { orderBook } = useBinance();
+    const asksContainerRef = React.useRef<HTMLDivElement>(null);
 
-    const asks = orderBook.asks.slice(0, 12).reverse();
-    const bids = orderBook.bids.slice(0, 12);
+    // Show more depth and auto-scroll to bottom of asks (closest to price)
+    const asks = orderBook.asks.slice(0, 50).reverse();
+    const bids = orderBook.bids.slice(0, 50);
+
+    // Auto-scroll asks to bottom on load/update
+    React.useEffect(() => {
+        if (asksContainerRef.current) {
+            asksContainerRef.current.scrollTop = asksContainerRef.current.scrollHeight;
+        }
+    }, [asks.length, orderBook.asks]); // Dependency on data updates
 
     // Calculate max total for depth visualization
     const maxTotal = Math.max(
@@ -47,7 +56,7 @@ export const OrderBook: React.FC = () => {
 
     // Calculate spread
     const spread = asks.length > 0 && bids.length > 0
-        ? asks[0].price - bids[0].price
+        ? asks[asks.length - 1].price - bids[0].price // Asks are reversed, last item is lowest asking price
         : 0;
     const spreadPercent = bids.length > 0 && spread > 0
         ? (spread / bids[0].price) * 100
@@ -68,7 +77,10 @@ export const OrderBook: React.FC = () => {
             </div>
 
             {/* Asks (Sell Orders) */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
+            <div
+                ref={asksContainerRef}
+                className="flex-1 overflow-y-auto scrollbar-hide"
+            >
                 {asks.length === 0 ? (
                     <div className="p-4 text-center text-xs text-gray-500">Loading asks...</div>
                 ) : (
