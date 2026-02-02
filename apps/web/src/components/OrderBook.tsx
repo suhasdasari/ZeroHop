@@ -6,73 +6,95 @@ import { useBinance } from '@/context/BinanceProvider';
 export const OrderBook: React.FC = () => {
     const { orderBook } = useBinance();
 
-    return (
-        <div className="flex flex-col h-full">
-            <div className="p-3 border-b border-gray-800 font-medium text-sm text-gray-400">Order Book</div>
+    const asks = orderBook.asks.slice(0, 12).reverse();
+    const bids = orderBook.bids.slice(0, 12);
 
+    // Calculate max total for depth visualization
+    const maxTotal = Math.max(
+        ...asks.map((ask) => ask.total),
+        ...bids.map((bid) => bid.total),
+        1
+    );
+
+    const renderRow = (item: { price: number; amount: number; total: number }, isBid: boolean) => {
+        const depthPercent = (item.total / maxTotal) * 100;
+
+        return (
+            <div
+                key={`${item.price}-${item.amount}`}
+                className="relative grid grid-cols-3 px-3 py-1 text-xs hover:bg-gray-800/50 cursor-pointer group"
+            >
+                {/* Depth bar */}
+                <div
+                    className={`absolute right-0 top-0 h-full ${isBid ? 'bg-green-500/10' : 'bg-red-500/10'
+                        }`}
+                    style={{ width: `${depthPercent}%` }}
+                />
+
+                {/* Content */}
+                <span className={`relative z-10 font-medium ${isBid ? 'text-green-400' : 'text-red-400'}`}>
+                    {item.price.toFixed(2)}
+                </span>
+                <span className="relative z-10 text-right text-gray-300">
+                    {item.amount.toFixed(5)}
+                </span>
+                <span className="relative z-10 text-right text-gray-400">
+                    {item.total.toFixed(2)}
+                </span>
+            </div>
+        );
+    };
+
+    // Calculate spread
+    const spread = asks.length > 0 && bids.length > 0
+        ? asks[0].price - bids[0].price
+        : 0;
+    const spreadPercent = bids.length > 0 && spread > 0
+        ? (spread / bids[0].price) * 100
+        : 0;
+
+    return (
+        <div className="flex flex-col h-full bg-[#0B0E11]">
             {/* Header */}
+            <div className="px-3 py-3 border-b border-gray-800">
+                <h3 className="text-sm font-semibold text-white">Order Book</h3>
+            </div>
+
+            {/* Column Headers */}
             <div className="grid grid-cols-3 px-3 py-2 text-xs text-gray-500 font-medium border-b border-gray-800">
                 <span>Price (USDT)</span>
                 <span className="text-right">Amount (BTC)</span>
                 <span className="text-right">Total</span>
             </div>
 
+            {/* Asks (Sell Orders) */}
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-                {/* Asks (Sell Orders) - Red */}
-                <div className="flex flex-col-reverse">
-                    {orderBook.asks.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-gray-500">Loading asks...</div>
-                    ) : (
-                        orderBook.asks.map((ask, i) => (
-                            <div
-                                key={`ask-${i}`}
-                                className="grid grid-cols-3 px-3 py-1 text-xs hover:bg-gray-800/30 cursor-pointer relative"
-                            >
-                                {/* Background bar for depth visualization */}
-                                <div
-                                    className="absolute right-0 top-0 bottom-0 bg-red-500/10"
-                                    style={{ width: `${Math.min((ask.total / orderBook.asks[orderBook.asks.length - 1]?.total || 1) * 100, 100)}%` }}
-                                />
-                                <span className="text-red-400 relative z-10">{ask.price.toFixed(2)}</span>
-                                <span className="text-right text-gray-300 relative z-10">{ask.amount.toFixed(5)}</span>
-                                <span className="text-right text-gray-400 relative z-10">{ask.total.toFixed(5)}</span>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                {/* Current Price Separator */}
-                {orderBook.bids.length > 0 && orderBook.asks.length > 0 && (
-                    <div className="px-3 py-2 border-y border-gray-800 bg-gray-900/50">
-                        <div className="text-lg font-bold text-green-400">
-                            {orderBook.bids[0]?.price.toFixed(2) || '---'}
-                        </div>
-                        <div className="text-xs text-gray-500">Spread: {(orderBook.asks[orderBook.asks.length - 1]?.price - orderBook.bids[0]?.price).toFixed(2)}</div>
-                    </div>
+                {asks.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-gray-500">Loading asks...</div>
+                ) : (
+                    asks.map((ask) => renderRow(ask, false))
                 )}
+            </div>
 
-                {/* Bids (Buy Orders) - Green */}
-                <div>
-                    {orderBook.bids.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-gray-500">Loading bids...</div>
-                    ) : (
-                        orderBook.bids.map((bid, i) => (
-                            <div
-                                key={`bid-${i}`}
-                                className="grid grid-cols-3 px-3 py-1 text-xs hover:bg-gray-800/30 cursor-pointer relative"
-                            >
-                                {/* Background bar for depth visualization */}
-                                <div
-                                    className="absolute right-0 top-0 bottom-0 bg-green-500/10"
-                                    style={{ width: `${Math.min((bid.total / orderBook.bids[orderBook.bids.length - 1]?.total || 1) * 100, 100)}%` }}
-                                />
-                                <span className="text-green-400 relative z-10">{bid.price.toFixed(2)}</span>
-                                <span className="text-right text-gray-300 relative z-10">{bid.amount.toFixed(5)}</span>
-                                <span className="text-right text-gray-400 relative z-10">{bid.total.toFixed(5)}</span>
-                            </div>
-                        ))
-                    )}
+            {/* Spread */}
+            <div className="px-3 py-2 bg-gray-900/50 border-y border-gray-800">
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Spread</span>
+                    <span className="text-gray-300 font-medium">
+                        {spread > 0
+                            ? `${spread.toFixed(2)} (${spreadPercent.toFixed(3)}%)`
+                            : '---'}
+                    </span>
                 </div>
+            </div>
+
+            {/* Bids (Buy Orders) */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+                {bids.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-gray-500">Loading bids...</div>
+                ) : (
+                    bids.map((bid) => renderRow(bid, true))
+                )}
             </div>
         </div>
     );

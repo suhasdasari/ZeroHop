@@ -7,6 +7,9 @@ import { CandleChart } from '@/components/chart/CandleChart';
 import { useYellow } from '@/context/YellowProvider';
 import { useBinance } from '@/context/BinanceProvider';
 import { OrderBook } from '@/components/OrderBook';
+import { TopStatsBar } from '@/components/TopStatsBar';
+import { ChartToolbar } from '@/components/ChartToolbar';
+import { BottomPanel } from '@/components/BottomPanel';
 
 export default function TradingApp() {
   const [activeTab, setActiveTab] = useState<"market" | "limit">("limit");
@@ -42,23 +45,18 @@ export default function TradingApp() {
   )
 
   return (
-    <div className="h-screen w-screen bg-[#0A0E17] text-gray-200 font-sans overflow-hidden flex flex-col">
+    <div className="h-screen w-screen bg-[#0B0E11] text-gray-200 font-sans overflow-hidden flex flex-col">
+      {/* Top Stats Bar */}
+      <TopStatsBar />
+
       {/* Header */}
-      <header className="h-[60px] flex items-center justify-between px-6 border-b border-gray-800 bg-[#0A0E17] shrink-0">
+      <header className="h-[50px] flex items-center justify-between px-6 border-b border-gray-800 bg-[#0B0E11] shrink-0">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-orange-400/20 flex items-center justify-center border border-orange-400/50">
-              <span className="text-orange-400 font-bold text-xs">₿</span>
-            </div>
-            <span className="font-bold text-lg tracking-wide text-white">BTC / USDT</span>
-          </div>
-          <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded border border-green-400/20">
-            {currentPrice ? currentPrice.toFixed(4) : "---"}
-          </span>
+          <span className="text-sm text-gray-400">Spot</span>
         </div>
         <button
           onClick={handleConnectClick}
-          className="px-4 py-1.5 rounded-full border border-gray-600 text-sm font-medium hover:bg-gray-800 transition-colors text-white"
+          className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm font-medium transition-colors text-white"
         >
           {isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
         </button>
@@ -66,12 +64,15 @@ export default function TradingApp() {
 
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
+        {/* Chart Toolbar */}
+        <ChartToolbar />
+
         {/* Left Wrapper (Chart + Market View + Bottom Panel) */}
         <div className="flex flex-col flex-1 min-w-0">
           {/* Top Row: Chart + Market View */}
           <div className="flex flex-1 min-h-0">
             {/* Left Column: Chart */}
-            <main className="flex-1 bg-[#0A0E17] flex flex-col relative border-r border-gray-800">
+            <main className="flex-1 bg-[#0B0E11] flex flex-col relative border-r border-gray-800">
               {/* Real Candle Chart */}
               <CandleChart lastCandle={lastCandle} />
             </main>
@@ -82,19 +83,8 @@ export default function TradingApp() {
             </aside>
           </div>
 
-          {/* Bottom Panel: Open Positions (Spans Chart + Market View) */}
-          <section className="h-[250px] border-t border-gray-800 bg-[#0A0E17] flex flex-col shrink-0">
-            <div className="flex border-b border-gray-800">
-              {['Open Positions', 'Order History', 'Trades'].map((tab, i) => (
-                <button key={tab} className={`px-6 py-3 text-sm font-medium ${i === 0 ? 'text-yellow-400 border-b-2 border-yellow-400 bg-yellow-400/5' : 'text-gray-400 hover:text-gray-200'}`}>
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <div className="flex-1 p-8 flex items-center justify-center text-gray-500 text-sm">
-              No open positions
-            </div>
-          </section>
+          {/* Bottom Panel */}
+          <BottomPanel />
         </div>
 
         {/* Right Column: Trading Terminal */}

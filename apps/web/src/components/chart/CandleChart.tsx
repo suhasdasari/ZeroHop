@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, CandlestickData, ColorType, CrosshairMode, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
+
+type Timeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
 
 interface CandleChartProps {
     lastCandle: {
@@ -15,6 +17,7 @@ interface CandleChartProps {
 }
 
 export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
+    const [timeframe, setTimeframe] = useState<Timeframe>('1m');
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -109,7 +112,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
         // Fetch historical data from Binance.US API
         const fetchHistoricalData = async () => {
             try {
-                const response = await fetch('/api/binance/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=100');
+                const response = await fetch(`/api/binance/api/v3/klines?symbol=BTCUSDT&interval=${timeframe}&limit=100`);
                 const data = await response.json();
 
                 // Binance klines format: [timestamp, open, high, low, close, volume, ...]
@@ -166,7 +169,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, []);
+    }, [timeframe]); // Re-fetch when timeframe changes
 
     // Update with real-time candle data
     useEffect(() => {
@@ -193,19 +196,42 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
         }
     }, [lastCandle]);
 
+    const timeframes: Timeframe[] = ['1m', '5m', '15m', '1h', '4h', '1d'];
+
     return (
-        <div className="relative w-full h-full">
-            <div ref={chartContainerRef} className="w-full h-full" />
-            <div className="absolute top-3 left-3 flex items-center gap-2 text-xs text-gray-400">
-                <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span>Live</span>
+        <div className="relative w-full h-full flex flex-col">
+            {/* Timeframe Selector - Moved to top for better accessibility */}
+            <div className="flex items-center justify-between px-4 py-2 bg-[#0B0E11] border-b border-gray-800">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span>Live</span>
+                    </div>
+                    <span className="text-gray-600">•</span>
+                    <span>BTC/USDT</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="font-medium text-indigo-400">{timeframe}</span>
                 </div>
-                <span className="text-gray-600">•</span>
-                <span>BTC/USDT</span>
-                <span className="text-gray-600">•</span>
-                <span>1m</span>
+
+                {/* Timeframe buttons */}
+                <div className="flex items-center gap-1 bg-gray-900/80 backdrop-blur-sm rounded-lg p-1 border border-gray-800">
+                    {timeframes.map((tf) => (
+                        <button
+                            key={tf}
+                            onClick={() => setTimeframe(tf)}
+                            className={`px-3 py-1.5 text-xs font-medium rounded transition-all ${timeframe === tf
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                }`}
+                        >
+                            {tf}
+                        </button>
+                    ))}
+                </div>
             </div>
+
+            {/* Chart Container */}
+            <div ref={chartContainerRef} className="w-full flex-1" />
         </div>
     );
 };
