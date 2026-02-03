@@ -27,6 +27,9 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
+        // Get user's timezone offset in minutes
+        const timezoneOffset = new Date().getTimezoneOffset();
+
         // Create chart with modern professional styling
         const chart = createChart(chartContainerRef.current, {
             layout: {
@@ -75,6 +78,15 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
                 secondsVisible: false,
                 fixLeftEdge: true,
                 fixRightEdge: true,
+            },
+            localization: {
+                timeFormatter: (timestamp: number) => {
+                    // Convert UTC timestamp to user's local time
+                    const date = new Date(timestamp * 1000);
+                    const hours = date.getHours().toString().padStart(2, '0');
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                },
             },
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
@@ -198,6 +210,10 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
 
     const timeframes: Timeframe[] = ['1m', '5m', '15m', '1h', '4h', '1d'];
 
+    // Get user's timezone abbreviation
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timezoneAbbr = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop() || 'Local';
+
     return (
         <div className="relative w-full h-full flex flex-col">
             {/* Timeframe Selector - Moved to top for better accessibility */}
@@ -211,6 +227,8 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
                     <span>BTC/USDT</span>
                     <span className="text-gray-600">•</span>
                     <span className="font-medium text-indigo-400">{timeframe}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-500" title={userTimezone}>{timezoneAbbr}</span>
                 </div>
 
                 {/* Timeframe buttons */}
