@@ -122,9 +122,14 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
         });
 
         // Fetch historical data from Binance.US API
-        const fetchHistoricalData = async () => {
+        const fetchHistoricalData = async (limit = 500, endTime?: number) => {
             try {
-                const response = await fetch(`/api/binance/api/v3/klines?symbol=BTCUSDT&interval=${timeframe}&limit=100`);
+                let url = `/api/binance/api/v3/klines?symbol=BTCUSDT&interval=${timeframe}&limit=${limit}`;
+                if (endTime) {
+                    url += `&endTime=${endTime}`;
+                }
+
+                const response = await fetch(url);
                 const data = await response.json();
 
                 // Binance klines format: [timestamp, open, high, low, close, volume, ...]
@@ -148,18 +153,57 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
                     };
                 });
 
-                candlestickSeries.setData(historicalData);
-                volumeSeries.setData(volumeData);
-                lastCandleRef.current = historicalData[historicalData.length - 1];
+                if (endTime) {
+                    // Prepend older data
+                    candlestickSeries.update(historicalData[0]);
+                    volumeSeries.update(volumeData[0]);
+                } else {
+                    // Initial load
+                    candlestickSeries.setData(historicalData);
+                    volumeSeries.setData(volumeData);
+                    lastCandleRef.current = historicalData[historicalData.length - 1];
+                }
 
-                // Fit content nicely
-                chart.timeScale().fitContent();
+                // Fit content nicely on initial load
+                if (!endTime) {
+                    chart.timeScale().fitContent();
+                }
+
+                return historicalData;
             } catch (error) {
                 console.error('Failed to fetch historical data from Binance.US:', error);
+                return [];
             }
         };
 
         fetchHistoricalData();
+
+        // Subscribe to visible range changes to load more data when scrolling left
+        const handleVisibleLogicalRangeChange = (logicalRange: any) => {
+            if (logicalRange === null) return;
+
+            // If user scrolled close to the left edge, load more historical data
+            if (logicalRange.from < 10) {
+                const timeScale = chart.timeScale();
+                const firstVisibleBar = candlestickSeries.dataByIndex(0);
+
+                if (firstVisibleBar && firstVisibleBar.time) {
+                    const firstTime = (firstVisibleBar.time as number) * 1000; // Convert to milliseconds
+
+                    // Fetch older data ending before the first visible candle
+                    fetchHistoricalData(100, firstTime - 1).then((newData) => {
+                        if (newData.length > 0) {
+                            // Update the series with older data
+                            newData.forEach((candle) => {
+                                candlestickSeries.update(candle);
+                            });
+                        }
+                    });
+                }
+            }
+        };
+
+        chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleLogicalRangeChange);
 
         chartRef.current = chart;
         candlestickSeriesRef.current = candlestickSeries;
@@ -179,6 +223,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({ lastCandle }) => {
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleLogicalRangeChange);
             chart.remove();
         };
     }, [timeframe]); // Re-fetch when timeframe changes
