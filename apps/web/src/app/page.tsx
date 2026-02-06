@@ -20,7 +20,46 @@ export default function TradingApp() {
   }, []);
 
   const { createOrder } = useYellow();
-  const { lastCandle } = useBinance();
+  const { lastCandle, currentPrice } = useBinance();
+
+  // Form State
+  const [orderPrice, setOrderPrice] = useState<string>("0.00");
+  const [orderAmount, setOrderAmount] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Update price when currentPrice is available (only once or when empty)
+  useEffect(() => {
+    if (currentPrice && orderPrice === "0.00") {
+      setOrderPrice(currentPrice.toFixed(2));
+    }
+  }, [currentPrice]);
+
+  const handleOrderSubmit = async () => {
+    if (!orderPrice || !orderAmount) return;
+
+    setIsSubmitting(true);
+    try {
+      const price = parseFloat(orderPrice);
+      const amount = parseFloat(orderAmount);
+
+      if (isNaN(price) || isNaN(amount) || price <= 0 || amount <= 0) {
+        // Handle validation error (could add toast here)
+        return;
+      }
+
+      await createOrder(side, price, amount);
+    } catch (error) {
+      console.error("Order failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePercentageClick = (pct: number) => {
+    // This would require knowing the user's available balance in USDT (for buy) or BTC (for sell)
+    // For now, these are placeholders
+    console.log(`Set amount to ${pct}% of balance`);
+  };
 
   return (
     <div className="h-screen w-screen bg-[#0B0E11] text-gray-200 font-sans overflow-hidden flex flex-col">
@@ -98,7 +137,8 @@ export default function TradingApp() {
               <label className="text-xs text-gray-500">Price (USDT)</label>
               <input
                 type="text"
-                defaultValue="0.8495"
+                value={orderPrice}
+                onChange={(e) => setOrderPrice(e.target.value)}
                 className="w-full bg-[#131722] border border-gray-700 rounded p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors text-right font-mono"
               />
             </div>
@@ -107,6 +147,8 @@ export default function TradingApp() {
               <input
                 type="text"
                 placeholder="0.00"
+                value={orderAmount}
+                onChange={(e) => setOrderAmount(e.target.value)}
                 className="w-full bg-[#131722] border border-gray-700 rounded p-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors text-right font-mono"
               />
             </div>
@@ -118,12 +160,22 @@ export default function TradingApp() {
 
             <div className="grid grid-cols-4 gap-2 mt-2">
               {[25, 50, 75, 100].map(pct => (
-                <button key={pct} className="bg-gray-800 hover:bg-gray-700 text-xs py-1 rounded text-gray-400">{pct}%</button>
+                <button
+                  key={pct}
+                  onClick={() => handlePercentageClick(pct)}
+                  className="bg-gray-800 hover:bg-gray-700 text-xs py-1 rounded text-gray-400"
+                >
+                  {pct}%
+                </button>
               ))}
             </div>
 
-            <button className={`w-full mt-6 py-4 rounded-lg font-bold text-lg shadow-lg transition-transform active:scale-95 ${side === 'buy' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-900/30' : 'bg-red-500 hover:bg-red-600 text-white shadow-red-900/30'}`}>
-              {side === 'buy' ? 'Buy BTC' : 'Sell BTC'}
+            <button
+              onClick={handleOrderSubmit}
+              disabled={isSubmitting}
+              className={`w-full mt-6 py-4 rounded-lg font-bold text-lg shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${side === 'buy' ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-900/30' : 'bg-red-500 hover:bg-red-600 text-white shadow-red-900/30'}`}
+            >
+              {isSubmitting ? 'Processing...' : (side === 'buy' ? 'Buy BTC' : 'Sell BTC')}
             </button>
           </div>
         </aside>
